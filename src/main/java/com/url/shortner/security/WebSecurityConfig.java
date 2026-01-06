@@ -5,6 +5,7 @@ import com.url.shortner.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -59,13 +60,12 @@ public class WebSecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-
+                        .requestMatchers(HttpMethod.GET, "/{shortCode}").permitAll()
                         .requestMatchers("/api/urls/**").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()
                 )
 
                 .authenticationProvider(authenticationProvider())
-
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -74,4 +74,5 @@ public class WebSecurityConfig {
 
         return http.build();
     }
+
 }
