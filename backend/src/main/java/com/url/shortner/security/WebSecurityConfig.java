@@ -27,7 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter; // ✅ FIX 1
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -51,26 +51,21 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
                 .csrf(AbstractHttpConfigurer::disable)
-
+                .cors(cors -> {})
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/{shortCode}").permitAll()
-                        .requestMatchers("/api/urls/**").hasAuthority("ROLE_USER")
-                        .anyRequest().authenticated()
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                .authenticationProvider(authenticationProvider())
-
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/public/**",
+                                "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 );
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

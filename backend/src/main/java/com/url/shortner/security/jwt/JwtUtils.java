@@ -4,6 +4,7 @@ import com.url.shortner.service.UserDetailsImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,37 +42,36 @@ public class JwtUtils {
                 .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .setSubject(username)
+                .subject(username)
                 .claim("roles", roles)
-                .setIssuedAt(new Date())
-                // ✅ FIX 2: correct expiration usage
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(key())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
-                .verifyWith((SecretKey) key())
+                .verifyWith((SecretKey) getKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
     }
 
-    private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    private SecretKey getKey() {
+        return Keys.hmacShaKeyFor(
+                Decoders.BASE64.decode(jwtSecret)
+        );
     }
-
 
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser()
-                    .verifyWith((SecretKey) key())
+                    .verifyWith((SecretKey) getKey())
                     .build()
                     .parseSignedClaims(authToken);
             return true;
-
         } catch (ExpiredJwtException e) {
             System.out.println("JWT expired");
         } catch (JwtException e) {
