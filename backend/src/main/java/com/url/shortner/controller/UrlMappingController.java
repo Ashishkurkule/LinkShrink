@@ -24,7 +24,7 @@ public class UrlMappingController {
     private UrlMappingService urlMappingService;
     private UserService userService;
     //{"originalUrl":"https://example.com"}
-    @PostMapping("/shortner")
+    @PostMapping("/shorten")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<UrlMappingDTO> createShortUrl(@RequestBody Map<String,String> request,
                                                         Principal principal){
